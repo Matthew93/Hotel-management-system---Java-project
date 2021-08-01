@@ -1,48 +1,32 @@
-package hotel.GUI;
+package hotel.GUI.admin;
 
-import java.awt.EventQueue;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 import java.awt.Font;
-import javax.swing.SwingConstants;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 
-import hotel.DAO.Customer;
 import hotel.DAO.Review;
 import hotel.DAO.Rooms;
+import hotel.GUI.user.ReviewPage;
+
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 
 public class RoomInfoPage {
 
 	JFrame frmRoomDetails;
-	JLabel lblGetId = new JLabel("");
+	JLabel lblGetId = new JLabel("");// this label is set with customerId from ReservationsPage when admin press view
+	// customer details
 	JLabel lblGetPrice = new JLabel("");
 	JLabel lblGetRoomNumber = new JLabel("");
 	JLabel lblGetAvailable = new JLabel("");
 	JLabel lblGetRoomType = new JLabel("");
-
-	/**
-	 * Launch the application.
-	 */
-	public static void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
-					RoomInfoPage window = new RoomInfoPage();
-					window.frmRoomDetails.setVisible(true);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
-	}
 
 	/**
 	 * Create the application.
@@ -105,6 +89,7 @@ public class RoomInfoPage {
 		lblRoomInfo.setBounds(99, 0, 126, 25);
 		panel.add(lblRoomInfo);
 
+		// this button will hide the current frame
 		JButton btnCancel = new JButton("Cancel");
 		btnCancel.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -116,6 +101,7 @@ public class RoomInfoPage {
 		btnCancel.setBounds(174, 200, 89, 23);
 		panel.add(btnCancel);
 
+		// this button will show the reviews from the selected room
 		JButton btnReview = new JButton("View reviews");
 		btnReview.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -129,6 +115,7 @@ public class RoomInfoPage {
 		panel.add(btnReview);
 	}
 
+	// getting the informations about the room that was selected by admin
 	public void getRoomInfo() {
 		SessionFactory factory = new Configuration().configure("hibernate.cfg.xml").addAnnotatedClass(Rooms.class)
 				.addAnnotatedClass(Review.class).buildSessionFactory();
@@ -142,7 +129,7 @@ public class RoomInfoPage {
 
 			lblGetRoomNumber.setText(room.getRoomNumber());
 			lblGetPrice.setText(String.valueOf(room.getPrice()));
-			lblGetAvailable.setText(String.valueOf(room.getAvailable()));
+
 			lblGetRoomType.setText(String.valueOf(room.getRoomType()));
 
 			session.getTransaction().commit();

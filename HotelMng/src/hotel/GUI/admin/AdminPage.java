@@ -1,11 +1,13 @@
-package hotel.GUI;
+package hotel.GUI.admin;
 
-import java.awt.EventQueue;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.ImageIcon;
 import javax.swing.JPanel;
+
+import hotel.GUI.user.LoginPage;
+
 import java.awt.Color;
 import javax.swing.JButton;
 import java.awt.Font;
@@ -14,23 +16,7 @@ import java.awt.event.ActionEvent;
 
 public class AdminPage {
 
-	JFrame frmAdmin;
-
-	/**
-	 * Launch the application.
-	 */
-	public static void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
-					AdminPage window = new AdminPage();
-					window.frmAdmin.setVisible(true);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
-	}
+	public JFrame frmAdmin;
 
 	/**
 	 * Create the application.
@@ -56,14 +42,16 @@ public class AdminPage {
 		panel.setLayout(null);
 
 		JLabel lblNewLabel = new JLabel("");
-		lblNewLabel
-				.setIcon(new ImageIcon("C:\\Users\\Rodica\\eclipse-workspace\\HotelMng\\images\\Admin-resized-2.jpg"));
+		lblNewLabel.setIcon(new ImageIcon(
+				"C:\\Users\\Rodica\\git\\Hotel-management-system---Java-project\\HotelMng\\images\\Admin-resized-2.jpg"));
 		lblNewLabel.setBounds(51, 37, 332, 147);
 		panel.add(lblNewLabel);
 
 		JButton btnReservation = new JButton("Reservations");
 		btnReservation.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+
+//				Open the frame with all the reservations.
 
 				ReservationsPage openReservations = new ReservationsPage();
 
@@ -80,6 +68,8 @@ public class AdminPage {
 		btnRooms.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 
+//				Open the frame with all the rooms.
+
 				RoomsPage viewRooms = new RoomsPage();
 				viewRooms.frmAdmin.setVisible(true);
 			}
@@ -92,6 +82,8 @@ public class AdminPage {
 		JButton btnSignUp = new JButton("Log out");
 		btnSignUp.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+
+//				Open the frame with the login and closing the admin one.
 
 				frmAdmin.setVisible(false);
 

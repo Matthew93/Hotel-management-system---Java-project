@@ -1,11 +1,13 @@
-package hotel.GUI;
+package hotel.GUI.user;
 
 import hotel.DAO.*;
+import hotel.GUI.admin.AdminPage;
+import hotel.utils.Encrypting;
+
 import java.awt.EventQueue;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 
 import org.hibernate.Session;
@@ -15,17 +17,19 @@ import org.hibernate.cfg.Configuration;
 import javax.swing.JPasswordField;
 import javax.swing.JButton;
 import java.awt.Color;
+
+import javax.persistence.Query;
 import javax.swing.ImageIcon;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
-import java.util.Date;
 import java.util.List;
 
+@SuppressWarnings("serial")
 public class LoginPage extends JFrame {
 
-	JFrame frmLogin;
+	public JFrame frmLogin;
 	private JTextField emailField;
 	private JPasswordField passwordField;
 
@@ -55,7 +59,6 @@ public class LoginPage extends JFrame {
 	/**
 	 * Initialize the contents of the frame.
 	 */
-	@SuppressWarnings("unchecked")
 	private void initialize() {
 		frmLogin = new JFrame();
 		frmLogin.setTitle("Login");
@@ -134,7 +137,10 @@ public class LoginPage extends JFrame {
 			@SuppressWarnings("deprecation")
 			public void actionPerformed(ActionEvent e) {
 				String email = emailField.getText();
-				if (!(emailField.getText().equals("") || passwordField.getText().equals(""))) {
+
+				String passwordDecrypt = "";
+
+				if (!(emailField.getText().isEmpty() || passwordField.getText().isEmpty())) {
 					SessionFactory factory = new Configuration().configure("hibernate.cfg.xml")
 							.addAnnotatedClass(Customer.class).addAnnotatedClass(Reservation.class)
 							.addAnnotatedClass(Review.class).addAnnotatedClass(Rooms.class)
@@ -142,46 +148,51 @@ public class LoginPage extends JFrame {
 					Session session = factory.getCurrentSession();
 
 					try {
+
 						session.beginTransaction();
 
-						List<Reservation> reservations = (List<Reservation>) session.createQuery("from Reservation")
-								.list();
+						Query usersQ = session.createQuery("from Users where email=:email");
+						usersQ.setParameter("email", emailField.getText());
 
-						Date date = new Date();
+						// the list has just one user because the user cannot create multiple accounts
+						// with same email address
+						@SuppressWarnings("unchecked")
+						List<Users> user =  usersQ.getResultList();
 
-						for (int i = 0; i < reservations.size(); i++) {
+						if (user.size() == 0) {
+							lbLoginPageErr.setText("The user does not exist!");
+						} else {
+							try {
+								Encrypting encryptPass = new Encrypting();
 
-							if (date.after(reservations.get(i).getCheckOut())) {
+								passwordDecrypt = encryptPass.decrypt(user.get(0).getPassword());
 
-								reservations.get(i).getRoom().setAvailable(true);
-								session.delete(reservations.get(i));
+							} catch (Exception e1) {
+								e1.printStackTrace();
 							}
 
-						}
-
-						List<Users> usersList = (List<Users>) session.createQuery("from Users").list();
-						for (int i = 0; i < usersList.size(); i++) {
-							if (usersList.get(i).getEmail().equals(emailField.getText())
-									&& usersList.get(i).getPassword().equals(passwordField.getText())) {
+							if (user.get(0).getEmail().equals(emailField.getText())
+									&& passwordDecrypt.equals(passwordField.getText())) {
 								lbLoginPageErr.setText("");
-								if (usersList.get(i).getAccountType().equals("user")) {
+								if (user.get(0).getAccountType().equals("user")) {
+
 									CreateReservationPage window = new CreateReservationPage();
 									window.frmCreateReservation.setVisible(true);
 
 									window.lblUserEmail.setText(email);
 									frmLogin.setVisible(false);
-									break;
 								} else {
+
 									AdminPage windowAd = new AdminPage();
 									windowAd.frmAdmin.setVisible(true);
 									frmLogin.setVisible(false);
-									break;
 								}
 
 							} else {
 								lbLoginPageErr.setText("The email or password is wrong!");
 							}
 						}
+
 						session.getTransaction().commit();
 					} finally {
 
@@ -218,7 +229,8 @@ public class LoginPage extends JFrame {
 		frmLogin.getContentPane().add(btnNewButton);
 
 		JLabel lbIcon = new JLabel("");
-		lbIcon.setIcon(new ImageIcon("C:\\Users\\Rodica\\eclipse-workspace\\HotelMng\\images\\images.png"));
+		lbIcon.setIcon(new ImageIcon(
+				"C:\\Users\\Rodica\\git\\Hotel-management-system---Java-project\\HotelMng\\images\\images.png"));
 		lbIcon.setBounds(133, 11, 230, 190);
 		frmLogin.getContentPane().add(lbIcon);
 

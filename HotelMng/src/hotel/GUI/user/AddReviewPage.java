@@ -1,7 +1,6 @@
-package hotel.GUI;
+package hotel.GUI.user;
 
-import java.awt.Component;
-import java.awt.EventQueue;
+
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -18,29 +17,11 @@ import hotel.DAO.Rooms;
 import javax.persistence.Query;
 import javax.swing.JButton;
 import java.awt.event.ActionListener;
-import java.util.List;
 import java.awt.event.ActionEvent;
 
 public class AddReviewPage {
-
 	JFrame frmAddReview;
 	JLabel lblRoomNumber = new JLabel("");
-
-	/**
-	 * Launch the application.
-	 */
-	public static void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
-					AddReviewPage window = new AddReviewPage();
-					window.frmAddReview.setVisible(true);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
-	}
 
 	/**
 	 * Create the application.
@@ -73,6 +54,7 @@ public class AddReviewPage {
 
 		JButton btnAddR = new JButton("Add review");
 		btnAddR.addActionListener(new ActionListener() {
+
 			public void actionPerformed(ActionEvent e) {
 				SessionFactory factory = new Configuration().configure("hibernate.cfg.xml")
 						.addAnnotatedClass(Rooms.class).addAnnotatedClass(Review.class).buildSessionFactory();
@@ -81,16 +63,14 @@ public class AddReviewPage {
 
 				try {
 					session.beginTransaction();
+//Get from database the room whith the specified roomNr that is selected from the user. 
 					Query query = session.createQuery("from Rooms where roomNumber=:roomNr");
 					query.setParameter("roomNr", lblRoomNumber.getText());
 
-					List<Rooms> list = query.getResultList();
-					Rooms r = list.get(0);
-					int id = r.getId();
-					
-					Rooms room = session.get(Rooms.class, id);
+					Rooms r = (Rooms) query.getResultList().get(0);
+//Adding a review for that room.
 					Review review = new Review(textArea.getText());
-					room.addReview(review);
+					r.addReview(review);
 
 					session.getTransaction().commit();
 

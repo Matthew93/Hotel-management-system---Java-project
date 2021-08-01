@@ -1,8 +1,10 @@
-package hotel.GUI;
+package hotel.GUI.admin;
 
-import java.awt.EventQueue;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.time.Period;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
 
@@ -15,7 +17,6 @@ import com.toedter.calendar.JDateChooser;
 import hotel.DAO.Customer;
 import hotel.DAO.Reservation;
 import hotel.DAO.Review;
-import hotel.DAO.RoomType;
 import hotel.DAO.Rooms;
 import hotel.utils.Validations;
 
@@ -32,7 +33,10 @@ import javax.swing.JScrollPane;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.awt.event.ActionEvent;
+import java.awt.Color;
 
 public class ReservationsPage {
 
@@ -41,22 +45,7 @@ public class ReservationsPage {
 	private JTextField totalPriceTxt;
 	private JTable table;
 	DefaultTableModel model;
-
-	/**
-	 * Launch the application.
-	 */
-	public static void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
-					ReservationsPage window = new ReservationsPage();
-					window.frmReservations.setVisible(true);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
-	}
+	Validations validate = new Validations();
 
 	/**
 	 * Create the application.
@@ -112,7 +101,7 @@ public class ReservationsPage {
 		panel.add(lblId_2_2);
 
 		JLabel lblId_2_2_1 = new JLabel("Total price:");
-		lblId_2_2_1.setBounds(34, 206, 59, 14);
+		lblId_2_2_1.setBounds(34, 227, 59, 14);
 		panel.add(lblId_2_2_1);
 
 		JDateChooser checkInDate = new JDateChooser();
@@ -123,22 +112,49 @@ public class ReservationsPage {
 		checkOutDate.setBounds(124, 171, 75, 20);
 		panel.add(checkOutDate);
 
+		JLabel lblErrTotal = new JLabel("");
+		lblErrTotal.setForeground(Color.RED);
+		lblErrTotal.setBounds(24, 248, 175, 14);
+		panel.add(lblErrTotal);
+
 		totalPriceTxt = new JTextField();
-		totalPriceTxt.setBounds(103, 203, 96, 20);
+// checking the input of price
+		totalPriceTxt.addFocusListener(new FocusAdapter() {
+			@Override
+			public void focusLost(FocusEvent e) {
+				if (validate.checkPrice(totalPriceTxt.getText()) == false) {
+					lblErrTotal.setText("Input should be a number");
+				} else {
+					lblErrTotal.setText("");
+				}
+			}
+
+			@Override
+			public void focusGained(FocusEvent e) {
+				lblErrTotal.setText("");
+			}
+		});
+		totalPriceTxt.setBounds(103, 224, 96, 20);
 		panel.add(totalPriceTxt);
 		totalPriceTxt.setColumns(10);
+
+		JLabel lblInvalidDate = new JLabel("");
+		lblInvalidDate.setForeground(Color.RED);
+		lblInvalidDate.setBounds(0, 196, 238, 14);
+		panel.add(lblInvalidDate);
 
 		JScrollPane scrollPane = new JScrollPane();
 		scrollPane.setBounds(226, 49, 397, 213);
 		panel.add(scrollPane);
 
 		table = new JTable();
-
+//transfer the data from the selected row from the table in the left side in the corresponding label
 		table.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				DefaultTableModel model = (DefaultTableModel) table.getModel();
-				int selectedRowIndex = table.getSelectedRow();
+				int selectedRowIndex = table.getSelectedRow();// the number of the selected row
+//				if no row selected will return -1
 				if (selectedRowIndex > -1) {
 					lblGetID.setText(model.getValueAt(selectedRowIndex, 0).toString());
 					lblGetCustomerId.setText(model.getValueAt(selectedRowIndex, 1).toString());
@@ -150,6 +166,7 @@ public class ReservationsPage {
 			}
 		});
 
+//		get the content from the reservations from database/refill the table 
 		JButton btnRefresh = new JButton("");
 		btnRefresh.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -190,9 +207,11 @@ public class ReservationsPage {
 			}
 		});
 		btnRefresh.setIcon(new ImageIcon(
-				"C:\\Users\\Rodica\\eclipse-workspace\\HotelMng\\images\\depositphotos_3881741-stock-illustration-3d-refresh-icon.jpg"));
+				"C:\\Users\\Rodica\\git\\Hotel-management-system---Java-project\\HotelMng\\images\\depositphotos_3881741-stock-illustration-3d-refresh-icon.jpg"));
 		btnRefresh.setBounds(593, 267, 30, 29);
 		panel.add(btnRefresh);
+
+// fill the table with reservations, this action take place when the admin open the reservations page
 
 		model = new DefaultTableModel();
 		Object[] column = { "Id", "Customer Id", "Room Id", "Check in", "Check out", "Total price" };
@@ -205,6 +224,8 @@ public class ReservationsPage {
 
 		try {
 			session.beginTransaction();
+
+//populate the rows and columns
 
 			@SuppressWarnings("unchecked")
 			List<Reservation> reserve = (List<Reservation>) session.createQuery("from Reservation").list();
@@ -227,8 +248,7 @@ public class ReservationsPage {
 
 		}
 
-		// .setModel(model);
-
+		Date date = new Date();
 		scrollPane.setViewportView(table);
 
 		JButton btnEditReservation = new JButton("Edit");
@@ -239,33 +259,63 @@ public class ReservationsPage {
 
 				if (selectedRowIndex > -1) {
 
+//					get the selected reservation id
+
 					int reservationId = (int) (model.getValueAt(table.getSelectedRow(), 0));
 
-					int answer = JOptionPane.showConfirmDialog(btnEditReservation,
-							"Are you sure you want to edit this row?", "Warning", JOptionPane.YES_NO_OPTION,
-							JOptionPane.WARNING_MESSAGE);
-					if (answer == JOptionPane.YES_OPTION) {
+					if (checkInDate.getDate() == null || checkOutDate.getDate() == null) {
+						lblInvalidDate.setForeground(Color.RED);
+						lblInvalidDate.setText("No date selected!");
+					} else {
 
-						SessionFactory factory = new Configuration().configure("hibernate.cfg.xml")
-								.addAnnotatedClass(Rooms.class).addAnnotatedClass(Review.class)
-								.addAnnotatedClass(Customer.class).addAnnotatedClass(Reservation.class)
-								.buildSessionFactory();
-						Session session = factory.getCurrentSession();
+//						the difference between check in and check out date to avoid the check in to be after the check out date
+						long diffDays = ChronoUnit.DAYS.between(checkInDate.getDate().toInstant(),
+								checkOutDate.getDate().toInstant());
 
-						try {
-							session.beginTransaction();
+//						get the past period from the check in and the current date
+						Period pastDate = Period.between(date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate(),
+								checkInDate.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
 
-							Reservation reserve = session.get(Reservation.class, reservationId);
+						if (diffDays <= 0 || selectedRowIndex == -1 || pastDate.getDays() < 0) {
 
-							reserve.setCheckIn(checkInDate.getDate());
-							reserve.setCheckOut(checkOutDate.getDate());
-							reserve.setTotalPrice(Double.parseDouble(totalPriceTxt.getText()));
+							lblInvalidDate.setForeground(Color.RED);
+							lblInvalidDate.setText("Invalid dates or no reservation selected!");
 
-							session.getTransaction().commit();
-						} finally {
+						} else {
+							if (validate.checkPrice(totalPriceTxt.getText()) == false) {
+								lblErrTotal.setText("This input should be a number!");
+							} else {
+//								reset the error labels to empty string
+								lblInvalidDate.setText("");
+								lblErrTotal.setText("");
+								int answer = JOptionPane.showConfirmDialog(btnEditReservation,
+										"Are you sure you want to edit this row?", "Warning", JOptionPane.YES_NO_OPTION,
+										JOptionPane.WARNING_MESSAGE);
+								if (answer == JOptionPane.YES_OPTION) {
 
-							factory.close();
+									SessionFactory factory = new Configuration().configure("hibernate.cfg.xml")
+											.addAnnotatedClass(Rooms.class).addAnnotatedClass(Review.class)
+											.addAnnotatedClass(Customer.class).addAnnotatedClass(Reservation.class)
+											.buildSessionFactory();
+									Session session = factory.getCurrentSession();
 
+									try {
+										session.beginTransaction();
+//get the reservation from the database with the selected id
+										Reservation reserve = session.get(Reservation.class, reservationId);
+// edit the following fields
+										reserve.setCheckIn(checkInDate.getDate());
+										reserve.setCheckOut(checkOutDate.getDate());
+										reserve.setTotalPrice(Double.parseDouble(totalPriceTxt.getText()));
+
+										session.getTransaction().commit();
+									} finally {
+
+										factory.close();
+
+									}
+								}
+							}
 						}
 					}
 				} else {
@@ -275,7 +325,7 @@ public class ReservationsPage {
 			}
 
 		});
-		btnEditReservation.setBounds(74, 252, 89, 23);
+		btnEditReservation.setBounds(74, 273, 89, 23);
 		panel.add(btnEditReservation);
 
 		JButton btnDeleteReservation = new JButton("Delete");
@@ -284,8 +334,7 @@ public class ReservationsPage {
 
 				int selectedRowIndex = table.getSelectedRow();
 
-				if (selectedRowIndex > -1) {
-
+				if (selectedRowIndex > -1) {// selectedRowIndex = -1 no row selected
 					int reservationId = (int) (model.getValueAt(table.getSelectedRow(), 0));
 
 					int answer = JOptionPane.showConfirmDialog(btnEditReservation,
@@ -306,8 +355,6 @@ public class ReservationsPage {
 
 							session.delete(reserve);
 
-							reserve.getRoom().setAvailable(true);
-
 							session.getTransaction().commit();
 						} finally {
 
@@ -321,7 +368,7 @@ public class ReservationsPage {
 
 			}
 		});
-		btnDeleteReservation.setBounds(74, 286, 89, 23);
+		btnDeleteReservation.setBounds(74, 307, 89, 23);
 		panel.add(btnDeleteReservation);
 
 		JButton btnViewCustomerDetail = new JButton("View customer details");
@@ -335,7 +382,12 @@ public class ReservationsPage {
 					int customerId = (int) (model.getValueAt(table.getSelectedRow(), 1));
 
 					CustomerInfoPage customerInfo = new CustomerInfoPage();
+
+					// set the label of CustomerInfoPage with the selected customerId
 					customerInfo.lblGetId.setText(String.valueOf(customerId));
+
+					// getCustomerInfo is called after the label of customerId is set to avoid null
+					// exception
 					customerInfo.getCustomerInfo();
 					customerInfo.frmCustomerDetails.setVisible(true);
 
@@ -361,7 +413,12 @@ public class ReservationsPage {
 					int roomId = (int) (model.getValueAt(table.getSelectedRow(), 2));
 
 					RoomInfoPage roomInfo = new RoomInfoPage();
+
+					// set the label of RoomInfoPage with the selected roomId
 					roomInfo.lblGetId.setText(String.valueOf(roomId));
+
+					// getRoomInfo is called after the label of roomId is set to avoid null
+					// exception
 					roomInfo.getRoomInfo();
 
 					roomInfo.frmRoomDetails.setVisible(true);

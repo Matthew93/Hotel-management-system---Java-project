@@ -26,9 +26,6 @@ public class Rooms {
 	@Column(name = "price")
 	Double price;
 
-	@Column(name = "available")
-	Boolean available;
-
 	@OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	@JoinColumn(name = "roomID")
 	List<Review> reviews;
@@ -40,10 +37,9 @@ public class Rooms {
 
 	}
 
-	public Rooms(String roomNumber, Double price, Boolean available, RoomType roomType) {
+	public Rooms(String roomNumber, Double price, RoomType roomType) {
 		this.roomNumber = roomNumber;
 		this.price = price;
-		this.available = available;
 		this.roomType = roomType;
 	}
 
@@ -69,14 +65,6 @@ public class Rooms {
 
 	public void setPrice(Double price) {
 		this.price = price;
-	}
-
-	public Boolean getAvailable() {
-		return available;
-	}
-
-	public void setAvailable(Boolean available) {
-		this.available = available;
 	}
 
 	public List<Review> getReviews() {

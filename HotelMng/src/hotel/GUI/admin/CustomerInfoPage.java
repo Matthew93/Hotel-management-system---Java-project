@@ -1,6 +1,6 @@
-package hotel.GUI;
+package hotel.GUI.admin;
 
-import java.awt.EventQueue;
+
 import java.awt.Font;
 
 import javax.swing.JButton;
@@ -19,7 +19,8 @@ import java.awt.event.ActionEvent;
 public class CustomerInfoPage {
 
 	JFrame frmCustomerDetails;
-	JLabel lblGetId = new JLabel("");
+	JLabel lblGetId = new JLabel("");// this label is set with customerId from ReservationsPage when admin press view
+										// customer details
 	JPanel panel = new JPanel();
 	JLabel lblGetFirstName = new JLabel("");
 	JLabel lblGetLastName = new JLabel("");
@@ -29,7 +30,6 @@ public class CustomerInfoPage {
 	/**
 	 * Launch the application.
 	 */
-
 
 	/**
 	 * Create the application.
@@ -47,7 +47,6 @@ public class CustomerInfoPage {
 		frmCustomerDetails.setBounds(100, 100, 320, 300);
 		frmCustomerDetails.getContentPane().setLayout(null);
 
-		
 		panel.setBounds(0, 0, 304, 261);
 		frmCustomerDetails.getContentPane().add(panel);
 		panel.setLayout(null);
@@ -79,22 +78,19 @@ public class CustomerInfoPage {
 		lblGetId.setBounds(103, 56, 170, 14);
 		panel.add(lblGetId);
 
-		
 		lblGetFirstName.setBounds(103, 81, 170, 14);
 		panel.add(lblGetFirstName);
 
-		
 		lblGetLastName.setBounds(103, 106, 170, 14);
 		panel.add(lblGetLastName);
 
-		
 		lblGetPhone.setBounds(103, 128, 170, 14);
 		panel.add(lblGetPhone);
 
-		
 		lblGetEmail.setBounds(103, 153, 170, 14);
 		panel.add(lblGetEmail);
 
+		// this button will hide the current frame
 		JButton btnCancel = new JButton("Cancel");
 		btnCancel.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -103,13 +99,10 @@ public class CustomerInfoPage {
 		});
 		btnCancel.setBounds(115, 195, 89, 23);
 		panel.add(btnCancel);
-		
-		
-
-
-	
 
 	}
+
+// getting the informations about the customer that was selected by admin
 	public void getCustomerInfo() {
 		SessionFactory factory = new Configuration().configure("hibernate.cfg.xml").addAnnotatedClass(Customer.class)
 				.buildSessionFactory();
@@ -130,6 +123,6 @@ public class CustomerInfoPage {
 		} finally {
 			factory.close();
 		}
-		
+
 	}
 }

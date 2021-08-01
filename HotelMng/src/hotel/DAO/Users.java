@@ -1,4 +1,5 @@
 package hotel.DAO;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -22,8 +23,10 @@ public class Users {
 
 	@Column(name = "accountType")
 	String accountType;
-	
-	public Users() {}
+
+	public Users() {
+	}
+
 	public Users(String email, String password, String accountType) {
 		this.email = email;
 		this.password = password;
@@ -60,11 +63,6 @@ public class Users {
 
 	public void setAccountType(String accountType) {
 		this.accountType = accountType;
-	}
-
-	@Override
-	public String toString() {
-		return "Users [id=" + id + ", email=" + email + ", password=" + password + ", accountType=" + accountType + "]";
 	}
 
 }

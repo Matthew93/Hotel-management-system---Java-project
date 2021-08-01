@@ -77,10 +77,4 @@ public class Customer {
 		this.email = email;
 	}
 
-	@Override
-	public String toString() {
-		return "Customer [id=" + id + ", firstName=" + firstName + ", lastName=" + lastName + ", phone=" + phone
-				+ ", email=" + email + "]";
-	}
-
 }

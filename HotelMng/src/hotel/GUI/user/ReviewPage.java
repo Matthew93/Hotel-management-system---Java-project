@@ -1,6 +1,6 @@
-package hotel.GUI;
+package hotel.GUI.user;
 
-import java.awt.EventQueue;
+
 import java.util.List;
 
 import javax.swing.JFrame;
@@ -19,7 +19,7 @@ import javax.swing.JScrollPane;
 
 public class ReviewPage {
 
-	JFrame frmReviews;
+	public JFrame frmReviews;
 	private JTable table;
 	DefaultTableModel model = new DefaultTableModel();
 

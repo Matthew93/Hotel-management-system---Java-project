@@ -1,10 +1,7 @@
-package hotel.GUI;
-
-import java.awt.EventQueue;
+package hotel.GUI.admin;
 
 import javax.swing.JFrame;
-import javax.swing.JPopupMenu;
-import java.awt.Component;
+
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
@@ -28,6 +25,8 @@ import javax.swing.JButton;
 import javax.swing.JScrollPane;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
+
+import javax.persistence.Query;
 import javax.swing.ImageIcon;
 import java.awt.Font;
 import hotel.DAO.*;
@@ -42,27 +41,12 @@ public class RoomsPage extends JFrame {
 	private JTextField roomNumberTxt;
 	private JTextField priceTxt;
 	private JTable table;
-	private JTextField availableTxt;
-
-	/**
-	 * Launch the application.
-	 */
-	public static void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
-					RoomsPage window = new RoomsPage();
-					window.frmAdmin.setVisible(true);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
-	}
+	Validations validate = new Validations();
 
 	/**
 	 * Create the application.
 	 */
+
 	public RoomsPage() {
 		initialize();
 	}
@@ -96,7 +80,7 @@ public class RoomsPage extends JFrame {
 		panel.add(lblPrice);
 
 		JLabel lblRoomType = new JLabel("Room type:");
-		lblRoomType.setBounds(22, 275, 74, 14);
+		lblRoomType.setBounds(20, 200, 74, 14);
 		panel.add(lblRoomType);
 
 		idTxt = new JTextField();
@@ -127,30 +111,32 @@ public class RoomsPage extends JFrame {
 
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		JComboBox roomTypeCmb = new JComboBox(RoomType.values());
-		roomTypeCmb.setBounds(112, 271, 100, 22);
+		roomTypeCmb.setBounds(110, 196, 100, 22);
 		panel.add(roomTypeCmb);
 
 		table = new JTable();
 		table.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
+
+				// get the selected row and fill the corresponding labels with the informations
 				DefaultTableModel model = (DefaultTableModel) table.getModel();
 				int selectedRowIndex = table.getSelectedRow();
 				if (selectedRowIndex > -1) {
 					idTxt.setText(model.getValueAt(selectedRowIndex, 0).toString());
 					roomNumberTxt.setText(model.getValueAt(selectedRowIndex, 1).toString());
 					priceTxt.setText(model.getValueAt(selectedRowIndex, 2).toString());
-					availableTxt.setText(model.getValueAt(selectedRowIndex, 3).toString());
-					roomTypeCmb.setSelectedItem(model.getValueAt(selectedRowIndex, 4));
+					roomTypeCmb.setSelectedItem(model.getValueAt(selectedRowIndex, 3));
 				}
 			}
 		});
 		scrollPane.setViewportView(table);
 
+		// fill the table with rooms from the database
 		model = new DefaultTableModel();
-		Object[] column = { "Id", "Room number", "Price", "Available", "Room type" };
+		Object[] column = { "Id", "Room number", "Price", "Room type" };
 		model.setColumnIdentifiers(column);
-		Object[] row = new Object[5];
+		Object[] row = new Object[4];
 		SessionFactory factory = new Configuration().configure("hibernate.cfg.xml").addAnnotatedClass(Rooms.class)
 				.addAnnotatedClass(Review.class).buildSessionFactory();
 		Session session = factory.getCurrentSession();
@@ -165,8 +151,8 @@ public class RoomsPage extends JFrame {
 				row[0] = roomsList.get(i).getId();
 				row[1] = roomsList.get(i).getRoomNumber();
 				row[2] = roomsList.get(i).getPrice();
-				row[3] = roomsList.get(i).getAvailable();
-				row[4] = roomsList.get(i).getRoomType();
+
+				row[3] = roomsList.get(i).getRoomType();
 				model.addRow(row);
 
 			}
@@ -181,30 +167,8 @@ public class RoomsPage extends JFrame {
 
 		table.setModel(model);
 
-		availableTxt = new JTextField();
-		Boolean correctAvailableInput = Validations.checkAvailable(availableTxt.getText());
-		availableTxt.addFocusListener(new FocusAdapter() {
-			@Override
-			public void focusLost(FocusEvent e) {
-				if (Validations.checkAvailable(availableTxt.getText()) == false) {
-					lblAvailableErr.setText("Input should be true or false");
-				} else {
-					lblAvailableErr.setText("");
-
-				}
-			}
-
-			@Override
-			public void focusGained(FocusEvent e) {
-				lblAvailableErr.setText("");
-			}
-		});
-		availableTxt.setColumns(10);
-		availableTxt.setBounds(113, 211, 99, 20);
-		panel.add(availableTxt);
-
 		roomNumberTxt = new JTextField();
-		Boolean correctRoomNumberInput = Validations.checkRoomNumber(roomNumberTxt.getText());
+		// after the field is filled and focus is lost the input is checked to be valid
 		roomNumberTxt.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusGained(FocusEvent e) {
@@ -213,7 +177,7 @@ public class RoomsPage extends JFrame {
 
 			@Override
 			public void focusLost(FocusEvent e) {
-				if (Validations.checkRoomNumber(roomNumberTxt.getText()) == false) {
+				if (validate.checkRoomNumber(roomNumberTxt.getText()) == false) {
 					lblRoomNumberErr.setText("Input should be like A01");
 				} else {
 					lblRoomNumberErr.setText("");
@@ -225,11 +189,10 @@ public class RoomsPage extends JFrame {
 		panel.add(roomNumberTxt);
 
 		priceTxt = new JTextField();
-		Boolean correctPriceInput = Validations.checkPrice(priceTxt.getText());
 		priceTxt.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusLost(FocusEvent e) {
-				if (Validations.checkPrice(priceTxt.getText()) == false) {
+				if (validate.checkPrice(priceTxt.getText()) == false) {
 					lblPriceErr.setText("Input should be a number");
 				} else {
 					lblPriceErr.setText("");
@@ -248,11 +211,11 @@ public class RoomsPage extends JFrame {
 		JButton btnAdd = new JButton("Add");
 		btnAdd.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if ((roomNumberTxt.getText().equals("") || priceTxt.getText().equals("")
-						|| availableTxt.getText().equals(""))
-						|| ((Validations.checkRoomNumber(roomNumberTxt.getText()) == false)
-								|| Validations.checkPrice(priceTxt.getText()) == false
-								|| Validations.checkAvailable(availableTxt.getText()) == false)) {
+
+				if ((roomNumberTxt.getText().isEmpty() || priceTxt.getText().isEmpty())
+						|| ((validate.checkRoomNumber(roomNumberTxt.getText()) == false)
+								|| validate.checkPrice(priceTxt.getText()) == false)) {
+
 					JOptionPane.showMessageDialog(btnAdd, "All fields should be completed with valid inputs!");
 				} else {
 
@@ -263,8 +226,10 @@ public class RoomsPage extends JFrame {
 					try {
 						session.beginTransaction();
 
+						// adding a room by getting the infos from the labels and saving them to
+						// database
 						Rooms room = new Rooms(roomNumberTxt.getText(), Double.parseDouble(priceTxt.getText()),
-								Boolean.parseBoolean(availableTxt.getText()), (RoomType) roomTypeCmb.getSelectedItem());
+								(RoomType) roomTypeCmb.getSelectedItem());
 
 						session.save(room);
 
@@ -277,18 +242,19 @@ public class RoomsPage extends JFrame {
 				}
 			}
 		});
-		btnAdd.setBounds(35, 321, 89, 23);
+		btnAdd.setBounds(20, 270, 89, 23);
 		panel.add(btnAdd);
 
 		JButton btnEdit = new JButton("Edit");
 		btnEdit.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+
 				int selectedRowIndex = table.getSelectedRow();
-				if ((roomNumberTxt.getText().equals("") || priceTxt.getText().equals("")
-						|| availableTxt.getText().equals(""))
-						|| ((Validations.checkRoomNumber(roomNumberTxt.getText()) == false)
-								|| Validations.checkPrice(priceTxt.getText()) == false
-								|| Validations.checkAvailable(availableTxt.getText()) == false)) {
+
+				if ((roomNumberTxt.getText().isEmpty() || priceTxt.getText().isEmpty())
+						|| ((validate.checkRoomNumber(roomNumberTxt.getText()) == false)
+								|| validate.checkPrice(priceTxt.getText()) == false)) {
+
 					JOptionPane.showMessageDialog(btnAdd, "All fields should be completed with valid inputs!");
 				} else {
 					if (selectedRowIndex > -1) {
@@ -301,16 +267,21 @@ public class RoomsPage extends JFrame {
 
 							SessionFactory factory = new Configuration().configure("hibernate.cfg.xml")
 									.addAnnotatedClass(Rooms.class).addAnnotatedClass(Review.class)
+									.addAnnotatedClass(Customer.class).addAnnotatedClass(Reservation.class)
 									.buildSessionFactory();
 							Session session = factory.getCurrentSession();
 
 							try {
 								session.beginTransaction();
 
+								// get the room from database with the selected roomId
 								Rooms room = session.get(Rooms.class, roomId);
+
+								// set all the fields with the user input in the database
 								room.setRoomNumber(roomNumberTxt.getText());
+
 								room.setPrice(Double.parseDouble(priceTxt.getText()));
-								room.setAvailable(Boolean.parseBoolean(availableTxt.getText()));
+
 								room.setRoomType((RoomType) roomTypeCmb.getSelectedItem());
 
 								session.getTransaction().commit();
@@ -327,7 +298,7 @@ public class RoomsPage extends JFrame {
 				}
 			}
 		});
-		btnEdit.setBounds(148, 321, 89, 23);
+		btnEdit.setBounds(133, 270, 89, 23);
 		panel.add(btnEdit);
 
 		JButton btnDelete = new JButton("Delete");
@@ -344,14 +315,30 @@ public class RoomsPage extends JFrame {
 					if (answer == JOptionPane.YES_OPTION) {
 
 						SessionFactory factory = new Configuration().configure("hibernate.cfg.xml")
-								.addAnnotatedClass(Rooms.class).addAnnotatedClass(Review.class).buildSessionFactory();
+								.addAnnotatedClass(Rooms.class).addAnnotatedClass(Customer.class)
+								.addAnnotatedClass(Reservation.class).addAnnotatedClass(Review.class)
+								.buildSessionFactory();
 						Session session = factory.getCurrentSession();
 
 						try {
 							session.beginTransaction();
 
 							Rooms room = session.get(Rooms.class, roomId);
-							session.delete(room);
+
+							Query reservationsQ = session.createQuery("from Reservation where room_id=:roomID");
+							reservationsQ.setParameter("roomID", roomId);
+							@SuppressWarnings("unchecked")
+							List<Reservation> reservations = reservationsQ.getResultList();
+							if (reservations.size() > 0) {
+
+								JOptionPane.showMessageDialog(btnDelete,
+										"This room is booked and cannot be deleted! Please delete the reservation first!");
+
+							} else {
+
+								session.delete(room);
+
+							}
 
 							session.getTransaction().commit();
 						} finally {
@@ -366,32 +353,29 @@ public class RoomsPage extends JFrame {
 
 			}
 		});
-		btnDelete.setBounds(35, 370, 89, 20);
+		btnDelete.setBounds(20, 319, 89, 20);
 		panel.add(btnDelete);
-
-		JLabel lblAvailable = new JLabel("Available:");
-		lblAvailable.setBounds(29, 214, 67, 14);
-		panel.add(lblAvailable);
 
 		JButton btnClear = new JButton("Clear");
 		btnClear.addActionListener(new ActionListener() {
+
 			public void actionPerformed(ActionEvent e) {
 				idTxt.setText("");
 				roomNumberTxt.setText("");
 				priceTxt.setText("");
-				availableTxt.setText("");
+
 			}
 		});
-		btnClear.setBounds(148, 369, 89, 20);
+		btnClear.setBounds(133, 318, 89, 20);
 		panel.add(btnClear);
 
 		JButton btnRefresh = new JButton("");
 		btnRefresh.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				model = new DefaultTableModel();
-				Object[] column = { "Id", "Room number", "Price", "Available", "Room type" };
+				Object[] column = { "Id", "Room number", "Price", "Room type" };
 				model.setColumnIdentifiers(column);
-				Object[] row = new Object[5];
+				Object[] row = new Object[4];
 				SessionFactory factory = new Configuration().configure("hibernate.cfg.xml")
 						.addAnnotatedClass(Rooms.class).addAnnotatedClass(Review.class).buildSessionFactory();
 				Session session = factory.getCurrentSession();
@@ -406,8 +390,8 @@ public class RoomsPage extends JFrame {
 						row[0] = roomsList.get(i).getId();
 						row[1] = roomsList.get(i).getRoomNumber();
 						row[2] = roomsList.get(i).getPrice();
-						row[3] = roomsList.get(i).getAvailable();
-						row[4] = roomsList.get(i).getRoomType();
+
+						row[3] = roomsList.get(i).getRoomType();
 						model.addRow(row);
 
 					}
@@ -424,7 +408,7 @@ public class RoomsPage extends JFrame {
 			}
 		});
 		btnRefresh.setIcon(new ImageIcon(
-				"C:\\Users\\Rodica\\eclipse-workspace\\HotelMng\\images\\depositphotos_3881741-stock-illustration-3d-refresh-icon.jpg"));
+				"C:\\Users\\Rodica\\git\\Hotel-management-system---Java-project\\HotelMng\\images\\depositphotos_3881741-stock-illustration-3d-refresh-icon.jpg"));
 		btnRefresh.setBounds(583, 402, 22, 23);
 		panel.add(btnRefresh);
 
@@ -440,24 +424,4 @@ public class RoomsPage extends JFrame {
 
 	}
 
-	@SuppressWarnings("unused")
-	private static void addPopup(Component component, final JPopupMenu popup) {
-		component.addMouseListener(new MouseAdapter() {
-			public void mousePressed(MouseEvent e) {
-				if (e.isPopupTrigger()) {
-					showMenu(e);
-				}
-			}
-
-			public void mouseReleased(MouseEvent e) {
-				if (e.isPopupTrigger()) {
-					showMenu(e);
-				}
-			}
-
-			private void showMenu(MouseEvent e) {
-				popup.show(e.getComponent(), e.getX(), e.getY());
-			}
-		});
-	}
 }

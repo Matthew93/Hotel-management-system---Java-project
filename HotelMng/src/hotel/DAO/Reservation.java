@@ -101,10 +101,6 @@ public class Reservation {
 		this.totalPrice = totalPrice;
 	}
 
-	@Override
-	public String toString() {
-		return "Reservation [id=" + id + ", customer=" + customer + ", room=" + room + ", checkIn=" + checkIn
-				+ ", checkOut=" + checkOut + ", totalPrice=" + totalPrice + "]";
-	}
+
 
 }

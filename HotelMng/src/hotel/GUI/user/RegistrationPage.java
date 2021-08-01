@@ -1,10 +1,10 @@
-package hotel.GUI;
+package hotel.GUI.user;
 
 import java.awt.Color;
-import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import javax.persistence.Query;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -18,6 +18,8 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
+import java.util.List;
+
 import hotel.DAO.*;
 import hotel.utils.*;
 
@@ -32,22 +34,7 @@ public class RegistrationPage {
 	private boolean validPhoneNumber = false;
 	private boolean validEmail = false;
 	private boolean validPassword = false;
-
-	/**
-	 * Launch the application.
-	 */
-	public static void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
-					RegistrationPage window = new RegistrationPage();
-					window.frmSignUp.setVisible(true);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
-	}
+	Validations validate = new Validations();
 
 	/**
 	 * Create the application.
@@ -120,7 +107,7 @@ public class RegistrationPage {
 
 			@Override
 			public void focusLost(FocusEvent e) {
-				if (!Validations.checkPhone(phoneNumberTxt.getText())) {
+				if (!validate.checkPhone(phoneNumberTxt.getText())) {
 					lbCheckPhoneNumber.setText("Invalid phone number!");
 					validPhoneNumber = false;
 
@@ -143,7 +130,7 @@ public class RegistrationPage {
 		emailTxt.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusLost(FocusEvent e) {
-				if (!Validations.checkEmail(emailTxt.getText())) {
+				if (!validate.checkEmail(emailTxt.getText())) {
 					lbCheckEmail.setText("Invalid email!");
 					validEmail = false;
 
@@ -173,7 +160,7 @@ public class RegistrationPage {
 			@SuppressWarnings("deprecation")
 			@Override
 			public void focusLost(FocusEvent e) {
-				if (!Validations.checkPassword(passwordTxt.getText())) {
+				if (!validate.checkPassword(passwordTxt.getText())) {
 					lbCheckPassword.setText("Invalid password!");
 					validPassword = false;
 
@@ -194,7 +181,8 @@ public class RegistrationPage {
 		frmSignUp.getContentPane().add(passwordTxt);
 
 		JLabel lblNewLabel_1 = new JLabel("");
-		lblNewLabel_1.setIcon(new ImageIcon("C:\\Users\\Rodica\\eclipse-workspace\\HotelMng\\images\\j.jpg"));
+		lblNewLabel_1.setIcon(new ImageIcon(
+				"C:\\Users\\Rodica\\git\\Hotel-management-system---Java-project\\HotelMng\\images\\j.jpg"));
 		lblNewLabel_1.setBounds(62, 37, 203, 134);
 		frmSignUp.getContentPane().add(lblNewLabel_1);
 
@@ -206,40 +194,62 @@ public class RegistrationPage {
 		JButton RegistrationPageBtn = new JButton("Create account");
 		RegistrationPageBtn.addActionListener(new ActionListener() {
 
+			@SuppressWarnings("deprecation")
 			public void actionPerformed(ActionEvent e) {
 
-				if ((firstNameTxt.getText().isEmpty() || lastNameTxt.getText().equals("")
-						|| phoneNumberTxt.getText().equals("") || emailTxt.getText().equals(""))
+				String passwordEncr = "";
+
+				if ((firstNameTxt.getText().isEmpty() || lastNameTxt.getText().isEmpty()
+						|| phoneNumberTxt.getText().isEmpty() || emailTxt.getText().isEmpty())
 						|| (validPhoneNumber == false || validEmail == false || validPassword == false)) {
 					lbEmptyFields.setText("All fields should be completed or some fields are invalid!");
 				} else {
+					//encrypt the user password
+					try {
+						Encrypting encryptPass = new Encrypting();
+
+						passwordEncr = encryptPass.encrypt(passwordTxt.getText());
+
+					} catch (Exception e1) {
+
+						e1.printStackTrace();
+					}
+
 					lbEmptyFields.setText("");
 					SessionFactory factory = new Configuration().configure("hibernate.cfg.xml")
 							.addAnnotatedClass(Customer.class).addAnnotatedClass(Users.class).buildSessionFactory();
 					Session session = factory.getCurrentSession();
 
 					try {
-
+						//create the customer with the user inputs
 						Customer customer = new Customer(firstNameTxt.getText(), lastNameTxt.getText(),
 								phoneNumberTxt.getText(), emailTxt.getText());
 
-						@SuppressWarnings("deprecation")
-						Users user = new Users(emailTxt.getText(), passwordTxt.getText(), "user");
-
 						session.beginTransaction();
+						//create the user with the user inputs
+						Users user = new Users(emailTxt.getText(), passwordEncr, "user");
 
-						session.save(customer);
-						session.save(user);
+						//check the email from the database if exists to avoid duplicate email
+						Query userq = session.createQuery("from Users where email=:emailDb");
+						userq.setParameter("emailDb", emailTxt.getText());
+						@SuppressWarnings("unchecked")
+						List<Users> getUser = userq.getResultList();
+						if (getUser.size() > 0) {
+							JOptionPane.showMessageDialog(RegistrationPageBtn, "Email already exists!");
+						} else {
+
+							session.save(customer);
+							session.save(user);
+
+							JOptionPane.showMessageDialog(RegistrationPageBtn, "Successfully registered!");
+							frmSignUp.setVisible(false);
+
+
+						}
 
 						session.getTransaction().commit();
 					} finally {
-						JOptionPane.showMessageDialog(RegistrationPageBtn, "Successfully registered!");
-						frmSignUp.setVisible(false);
-						
-						LoginPage login = new LoginPage();
-						login.frmLogin.setVisible(true);
-						
-						
+
 						firstNameTxt.setText("");
 						lastNameTxt.setText("");
 						emailTxt.setText("");
